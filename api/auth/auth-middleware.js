@@ -23,7 +23,7 @@ const restricted = (req, res, next) => {
  }
  jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
   if (err) {
-    next({ status: 401, message: 'Token required'})
+    next({ status: 401, message: 'Token invalid'})
   } else {
     req.decodedToken = decodedToken
     next()
@@ -43,7 +43,12 @@ const only = role_name => (req, res, next) => {
 
     Pull the decoded token from the req object, to avoid verifying it again!
   */
- next()
+ if (role_name === req.decodedToken.role_name) {
+  next()
+ } else {
+  next({ status: 403, message: 'This is not for you' })
+ }
+
 }
 
 
@@ -58,7 +63,7 @@ const checkUsernameExists = async (req, res, next) => {
     try {
       const [user] = await findBy({ username: req.body.username })
       if (!user) {
-        next({ status: 422, message: 'Invalid credentials'})
+        next({ status: 401, message: 'Invalid credentials'})
       } else {
         req.user = user  
         next()
